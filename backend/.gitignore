@@ -1,0 +1,12 @@
+.DS_Store
+virtualenv
+__pycache__/
+*.pyc
+.vscode
+.pytest_cache
+htmlcov
+.coverage
+test.json
+test.py
+.coverage.*
+.mypy_cache

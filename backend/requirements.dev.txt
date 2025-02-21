@@ -1,0 +1,14 @@
+aiohttp
+aiodns 
+transformers 
+torch 
+torch-vision
+
+# dev requirements
+black
+prospector
+coverage
+isort
+mypy
+bandit
+aiohttp-devtools
