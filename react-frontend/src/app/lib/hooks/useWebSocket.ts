@@ -25,8 +25,6 @@ export const useWebSocket = (
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("Received:", data.answer);
-
         // Handle the streaming response
         if (data.answer === "[END]") {
           onMessage("", true); // Signal completion
@@ -63,7 +61,6 @@ export const useWebSocket = (
           type: "auto",
           question: message,
         };
-        console.log("Sending:", payload);
         socket.send(JSON.stringify(payload));
       } else {
         console.log("Socket not ready:", {
