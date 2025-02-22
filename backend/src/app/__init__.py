@@ -41,7 +41,7 @@ async def chat_handler(request: Request) -> Response:
                 if question_type == 'auto':
                     # Stream response token by token.
                     async for token in gpt_question_and_answer(question):
-                        await ws.send_str(token)
+                        await ws.send_json({'answer': token})
                 # elif question_type == 'normal':
                 #     # Use squad question answering (non-streamed).
                 #     answer = await squad_question_answering(question)

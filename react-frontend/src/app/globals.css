@@ -2,20 +2,34 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+	html {
+		scroll-behavior: smooth;
+	}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+	input[type],
+	textarea,
+	select {
+		@apply appearance-none border-none ring-0 outline-hidden;
+
+		&:focus {
+			@apply border-none ring-0 outline-hidden;
+		}
+
+		&:focus-visible {
+			@apply border-none ring-0 outline-hidden;
+		}
+	}
+
+	button {
+		@apply cursor-pointer;
+	}
 }
