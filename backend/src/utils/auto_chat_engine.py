@@ -37,7 +37,7 @@ async def stream_chat_response(
     top_k: int = 50,
     top_p: float = 0.9,
     repetition_penalty: float = 1.5,
-    stopping_strings: list[str] = ['\nQuestion:', '\n\n', '\nQ', '\nB', '\nC', '\nD'],
+    stopping_strings: list[str] = ['\nQuestion:', '\nQ', '\nB', '\nC', '\nD'],
     repetition_window: int = 10,
 ):
     device = next(model.parameters()).device
@@ -95,6 +95,9 @@ async def stream_chat_response(
             previous_generated_text = current_generated_text
 
         await asyncio.sleep(0)
+
+    # Return the final text
+    yield "[END]"
 
 
 async def gpt_question_and_answer(question: str):

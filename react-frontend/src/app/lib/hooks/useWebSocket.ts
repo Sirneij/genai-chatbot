@@ -28,8 +28,7 @@ export const useWebSocket = (
         console.log("Received:", data.answer);
 
         // Handle the streaming response
-        if (data.answer === "") {
-          // "[END]"
+        if (data.answer === "[END]") {
           onMessage("", true); // Signal completion
         } else {
           onMessage(data.answer, false);

@@ -3,4 +3,5 @@ export type Message = {
   text: string;
   sender: "user" | "bot";
   complete?: boolean;
+  loading?: boolean;
 };

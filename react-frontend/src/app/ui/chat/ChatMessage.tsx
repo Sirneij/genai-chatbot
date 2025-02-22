@@ -1,4 +1,5 @@
 import { Message } from "$/app/lib/types";
+import { ThinkingAnimation } from "$/app/ui/reusables";
 
 interface ChatMessageProps {
   message: Message;
@@ -18,9 +19,15 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             : "bg-[#fafafa] text-[#171717] dark:bg-[#141414] dark:text-[#ededed]"
         }`}
       >
-        {message.text}
-        {!message.complete && message.sender === "bot" && (
-          <span className="animate-pulse">|</span>
+        {message.loading ? (
+          <ThinkingAnimation />
+        ) : (
+          <>
+            {message.text}
+            {message.sender === "bot" && !message.complete && (
+              <span className="ml-1 animate-pulse">|</span>
+            )}
+          </>
         )}
       </div>
     </div>

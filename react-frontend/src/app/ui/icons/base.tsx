@@ -1,6 +1,4 @@
-interface IconProps extends React.SVGProps<SVGSVGElement> {
-  //   size?: number;
-}
+interface IconProps extends React.SVGProps<SVGSVGElement> {}
 
 export const MoonIcon = ({ ...props }: IconProps) => (
   <svg
