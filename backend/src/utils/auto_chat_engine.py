@@ -4,7 +4,7 @@ import torch
 from torch.cuda.amp import autocast
 from transformers import PreTrainedTokenizerFast
 
-from src.utils.base import prepare_tokenizer_and_model
+from src.utils.base import get_stopping_strings, prepare_tokenizer_and_model
 from src.utils.settings import MODEL_NAME
 
 
@@ -32,12 +32,12 @@ async def stream_chat_response(
     prompt: str,
     tokenizer: PreTrainedTokenizerFast,
     model,
+    stopping_strings: list[str],
     max_new_tokens: int = 100,
     temperature: float = 0.7,
     top_k: int = 50,
     top_p: float = 0.9,
     repetition_penalty: float = 1.5,
-    stopping_strings: list[str] = ['\nQuestion:', '\nQ', '\nB', '\nC', '\nD'],
     repetition_window: int = 10,
 ):
     device = next(model.parameters()).device
@@ -103,11 +103,13 @@ async def stream_chat_response(
 async def gpt_question_and_answer(question: str):
     """Stream an answer with repetition penalty and better stopping checks."""
     tokenizer, model = await prepare_tokenizer_and_model(MODEL_NAME)
-    prompt = f'Q: {question}\nA:'
+    prompt, stopping_strings = await get_stopping_strings('exNormal', question)
     async for chunk in stream_chat_response(
         prompt,
         tokenizer,
         model,
-        max_new_tokens=1500,  # Increase this for longer outputs
+        stopping_strings=stopping_strings,
+        max_new_tokens=2000,  # Increase this for longer outputs
+        top_p=0.95,
     ):
         yield chunk

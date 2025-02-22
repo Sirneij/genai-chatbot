@@ -34,3 +34,75 @@ async def prepare_tokenizer_and_model(model_name: str):
         global_tokenizer, global_model = local_tokenizer, local_model
 
     return global_tokenizer, global_model
+
+
+async def get_stopping_strings(type: str, question: str) -> list[str]:
+    """Get stopping strings based on the question type."""
+    STOPPING_STRINGS = {
+        'normal': {
+            'prompt': f'Q: {question}\nA:',
+            'end': ['\nQuestion:', '\nQ', '\nB', '\nC', '\nD'],
+        },
+        'markdownPhind': {
+            'prompt': f"""
+                Write a detailed technical response in proper markdown format. Include headers, bullet points, and code blocks.
+                
+                Content: {question}
+                
+                Format:
+                ```
+                # Main Topic
+                
+                ## Section 1
+                - Point 1
+                - Point 2
+                
+                ```python
+                # Code examples go here
+                ```
+                
+                ## Section 2
+                More content...
+                ```
+                """,
+            'end': [
+                '\n## Conclusion',
+                '\n# References',
+                '\n## Summary',
+                '\n=== END ===',
+                '\n## Final Thoughts',
+                '\n# End of Document',
+                '\n## Last Updated',
+                '\n# Change Log',
+                '\n## Revision History',
+                '\n=== DONE ===',
+                '\n## THE END',
+                '\n# Completed',
+            ],
+        },
+        'markdownDeep': {
+            'prompt': f'''Q: {question}
+
+                    Please format your answer using markdown with:
+                    - Headings (##)
+                    - Lists (• or 1.)
+                    - Code blocks (```)
+                    - Bold/**emphasis**
+
+                    When you're done, end your response with === END ===
+                    
+                    A:
+                    ''',
+            'end': [
+                '\n```\n\n',  # Code block ending
+                '\n## ',  # Next heading
+                '\n**Q:',  # New question
+                '\n=== END ===',  # End of response
+            ],
+        },
+        'exNormal': {
+            'prompt': f'Q: {question}\n\nPlease answer using markdown formatting.\nWhen you are done, let your response be === END ===\nA:',
+            'end': ['\nQuestion:', '\nQ', '\nA' '\nB', '\nC', '\nD', '\n=== END ==='],
+        },
+    }
+    return STOPPING_STRINGS[type]['prompt'], STOPPING_STRINGS[type]['end']
