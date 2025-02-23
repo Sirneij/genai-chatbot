@@ -1,7 +1,8 @@
 import { marked } from "marked";
-import type { Tokens } from "marked";
 import { Message } from "$/app/lib/types";
 import { ThinkingAnimation } from "$/app/ui/reusables";
+import "katex/dist/katex.min.css";
+import katex from "katex";
 
 // Configure marked for inline rendering
 marked.setOptions({
@@ -12,9 +13,39 @@ marked.setOptions({
 
 // Custom renderer to handle streaming better
 const renderer = new marked.Renderer();
-renderer.paragraph = function (paragraph: Tokens.Paragraph): string {
-  return `<span>${paragraph.text}</span>`;
+
+// Add math support
+const mathRenderer = {
+  name: "math",
+  level: "inline",
+  start(src: string) {
+    return src.match(/\$/)?.index;
+  },
+  tokenizer(src: string) {
+    const match = src.match(/^\$\$([^$\n]+?)\$\$|^\$([^$\n]+?)\$/);
+    if (match) {
+      const isDisplay = match[0].startsWith("$$");
+      return {
+        type: "math",
+        raw: match[0],
+        text: (isDisplay ? match[1] : match[2]).trim(),
+        isDisplay,
+      };
+    }
+  },
+  renderer(token: any) {
+    try {
+      return katex.renderToString(token.text, {
+        throwOnError: false,
+        displayMode: token.isDisplay,
+      });
+    } catch (err) {
+      return token.raw;
+    }
+  },
 };
+
+marked.use({ extensions: [mathRenderer] });
 
 interface ChatMessageProps {
   message: Message;
@@ -37,18 +68,13 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         {message.loading ? (
           <ThinkingAnimation />
         ) : (
-          <div className="prose dark:prose-invert max-w-none">
+          <div className="prose dark:prose-invert max-w-none animate-fade-in">
             {message.sender === "bot" ? (
-              <>
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: marked(message.text, { renderer }),
-                  }}
-                />
-                {!message.complete && (
-                  <span className="ml-1 animate-pulse">|</span>
-                )}
-              </>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: marked(message.text, { renderer }),
+                }}
+              />
             ) : (
               <span
                 dangerouslySetInnerHTML={{

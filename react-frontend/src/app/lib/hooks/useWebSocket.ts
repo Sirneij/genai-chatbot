@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 type WebSocketMessage = {
-  type: "auto" | "error";
+  type: string;
   question: string;
 };
 
@@ -55,10 +55,10 @@ export const useWebSocket = (
   }, [url, onMessage]);
 
   const sendMessage = useCallback(
-    (message: string) => {
+    (message: string, type: string) => {
       if (socket && isConnected) {
         const payload: WebSocketMessage = {
-          type: "auto",
+          type: type,
           question: message,
         };
         socket.send(JSON.stringify(payload));

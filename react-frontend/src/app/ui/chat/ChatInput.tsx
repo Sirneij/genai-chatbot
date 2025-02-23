@@ -8,20 +8,20 @@ import {
   AttachIcon,
 } from "$/app/ui/icons/base";
 
-interface ChatInputProps {
-  onSend: (message: string) => void;
+type ChatInputProps = {
+  onSend: (message: string, type: string) => void;
   messageCount: number;
-}
+};
 
 export default function ChatInput({ onSend, messageCount }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [useSearch, setUseSearch] = useState(false);
-  const [useThink, setUseThink] = useState(false);
+  const [useMasked, setUseMasked] = useState(false);
+  const [useAuto, setUseAuto] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      onSend(message);
+      onSend(message, useMasked ? "masked" : "auto");
       setMessage("");
     }
   };
@@ -50,7 +50,7 @@ export default function ChatInput({ onSend, messageCount }: ChatInputProps) {
                 className={`
                 flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer
                 ${
-                  useSearch
+                  useMasked
                     ? "bg-[#e5e5e5] dark:bg-[#262626]"
                     : "hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50"
                 }
@@ -59,19 +59,22 @@ export default function ChatInput({ onSend, messageCount }: ChatInputProps) {
               >
                 <input
                   type="checkbox"
-                  checked={useSearch}
-                  onChange={() => setUseSearch(!useSearch)}
+                  checked={useMasked}
+                  onChange={() => {
+                    setUseMasked(!useMasked);
+                    setUseAuto(useMasked); // Toggle Auto off when Masked is on
+                  }}
                   className="hidden"
                 />
                 <SearchIcon className="h-4 w-4" />
-                <span className="text-sm">Deep Search</span>
+                <span className="text-sm">Masked</span>
               </label>
 
               <label
                 className={`
                 flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer
                 ${
-                  useThink
+                  useAuto
                     ? "bg-[#e5e5e5] dark:bg-[#262626]"
                     : "hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50"
                 }
@@ -80,24 +83,35 @@ export default function ChatInput({ onSend, messageCount }: ChatInputProps) {
               >
                 <input
                   type="checkbox"
-                  checked={useThink}
-                  onChange={() => setUseThink(!useThink)}
+                  checked={useAuto}
+                  onChange={() => {
+                    setUseAuto(!useAuto);
+                    setUseMasked(useAuto); // Toggle Masked off when Auto is on
+                  }}
                   className="hidden"
                 />
                 <ThinkIcon className="h-4 w-4" />
-                <span className="text-sm">Think</span>
+                <span className="text-sm">Auto</span>
               </label>
             </div>
 
             <div className="flex gap-3">
               <button
                 type="button"
-                className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50 transition-colors"
+                disabled={!useMasked} // Disable when not in Masked mode
+                className={`
+                  flex items-center gap-2 px-2 py-1 rounded-md 
+                  ${
+                    useMasked
+                      ? "hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50"
+                      : "opacity-50 cursor-not-allowed"
+                  }
+                  transition-colors
+                `}
               >
                 <AttachIcon className="h-4 w-4" />
                 <span className="text-sm">Attach</span>
               </button>
-
               <button
                 type="submit"
                 disabled={!message.trim()}

@@ -46,10 +46,10 @@ async def chat_handler(request: Request) -> Response:
                     # Stream response token by token.
                     async for token in gpt_question_and_answer(question):
                         await ws.send_json({'answer': token})
-                # elif question_type == 'normal':
-                #     # Use squad question answering (non-streamed).
-                #     answer = await squad_question_answering(question)
-                #     await ws.send_str(answer)
+                elif question_type == 'masked':
+                    # Use squad question answering (non-streamed).
+                    answer = await squad_question_answering(question)
+                    await ws.send_json({'answer': answer})
                 else:
                     await ws.send_str('Error: Unknown question type.')
             except Exception as e:

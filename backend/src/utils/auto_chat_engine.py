@@ -39,7 +39,7 @@ async def stream_chat_response(
     top_p: float = 0.9,
     repetition_penalty: float = 1.5,
     repetition_window: int = 10,
-):
+) :
     device = next(model.parameters()).device
     eos_token_id = tokenizer.eos_token_id
     inputs = tokenizer(prompt, return_tensors='pt')
@@ -52,9 +52,12 @@ async def stream_chat_response(
     for _ in range(max_new_tokens):
         with torch.no_grad():
             if device.type == 'cuda':
-                with autocast(device_type='cuda', dtype=torch.float16):
+                with torch.autocast(device_type='cuda', dtype=torch.float16):
                     outputs = model(full_generated_ids, attention_mask=attention_mask)
-            else:
+            elif device.type == 'mps':
+                with torch.autocast(device_type='mps', dtype=torch.bfloat16):
+                    outputs = model(full_generated_ids, attention_mask=attention_mask)
+            else:  # CPU
                 outputs = model(full_generated_ids, attention_mask=attention_mask)
 
         next_token_logits = outputs.logits[:, -1, :]
@@ -102,10 +105,10 @@ async def stream_chat_response(
             await asyncio.sleep(0)
 
     # Return the final text
-    yield "[END]"
+    yield '[END]'
 
 
-async def gpt_question_and_answer(question: str):
+async def gpt_question_and_answer(question: str) :
     """Stream an answer with repetition penalty and better stopping checks."""
     tokenizer, model = await prepare_tokenizer_and_model(MODEL_NAME)
     prompt, stopping_strings = await get_stopping_strings('exNormal', question)

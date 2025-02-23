@@ -3,52 +3,46 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@layer base {
-	*,
-	::after,
-	::before,
-	::backdrop,
-	::file-selector-button {
-		border-color: var(--color-gray-200, currentColor);
-	}
+@theme {
+  --animate-fade-in: fadeIn 0.5s ease-in;
 
-	html {
-		scroll-behavior: smooth;
-	}
-
-	input[type],
-	textarea,
-	select {
-		@apply appearance-none border-none ring-0 outline-hidden;
-
-		&:focus {
-			@apply border-none ring-0 outline-hidden;
-		}
-
-		&:focus-visible {
-			@apply border-none ring-0 outline-hidden;
-		}
-	}
-
-	button {
-		@apply cursor-pointer;
-	}
-}
-@layer utilities {
-	.scrollbar-thin {
-	  scrollbar-width: thin;
-	}
-	
-	.scrollbar-thumb-gray-300::-webkit-scrollbar {
-	  width: 6px;
-	}
-	
-	.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-	  background-color: #d1d5db;
-	  border-radius: 3px;
-	}
-	
-	.dark .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
-	  background-color: #374151;
-	}
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  input[type],
+  textarea,
+  select {
+    @apply appearance-none border-none ring-0 outline-hidden;
+
+    &:focus {
+      @apply border-none ring-0 outline-hidden;
+    }
+
+    &:focus-visible {
+      @apply border-none ring-0 outline-hidden;
+    }
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

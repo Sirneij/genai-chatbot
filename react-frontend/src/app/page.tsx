@@ -7,12 +7,13 @@ import { Logo } from "$/app/ui/icons/base";
 import { useWebSocket } from "$/app/lib/hooks/useWebSocket";
 import { Message } from "$/app/lib/types";
 import { useAutoScroll } from "$/app/lib/hooks/useAutoScroll";
+import { BASE_WS_URL } from "./lib/constants";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollRef = useAutoScroll<HTMLDivElement>(messages);
 
-  const handleSend = (message: string) => {
+  const handleSend = (message: string, type: string) => {
     const newMessage = {
       id: Date.now(),
       text: message,
@@ -29,7 +30,7 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, newMessage, loadingMessage]);
-    sendMessage(message);
+    sendMessage(message, type);
   };
 
   const handleBotMessage = useCallback(
@@ -80,7 +81,7 @@ export default function Home() {
   );
 
   const { sendMessage, isConnected, error } = useWebSocket(
-    "ws://localhost:8000/ws",
+    `${BASE_WS_URL}/ws`,
     handleBotMessage
   );
 
@@ -100,10 +101,7 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700"
-          >
+          <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar">
             <ChatContainer messages={messages} />
           </div>
           <ChatInput onSend={handleSend} messageCount={messages.length} />
