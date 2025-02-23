@@ -94,7 +94,12 @@ async def stream_chat_response(
             yield diff
             previous_generated_text = current_generated_text
 
-        await asyncio.sleep(0)
+        if device.type == 'mps':
+            await asyncio.sleep(0.001)  # Yield event loop for MPS
+        elif device.type == 'cpu':
+            await asyncio.sleep(0.005)  # Reduce CPU load
+        else:
+            await asyncio.sleep(0)
 
     # Return the final text
     yield "[END]"

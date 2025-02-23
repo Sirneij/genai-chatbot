@@ -13,7 +13,7 @@ marked.setOptions({
 // Custom renderer to handle streaming better
 const renderer = new marked.Renderer();
 renderer.paragraph = function (paragraph: Tokens.Paragraph): string {
-  return `<p class="flex">${paragraph.text}</p>`;
+  return `<span>${paragraph.text}</span>`;
 };
 
 interface ChatMessageProps {
@@ -37,7 +37,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         {message.loading ? (
           <ThinkingAnimation />
         ) : (
-          <div className="prose dark:prose-invert max-w-none flex">
+          <div className="prose dark:prose-invert max-w-none">
             {message.sender === "bot" ? (
               <>
                 <span
@@ -50,7 +50,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 )}
               </>
             ) : (
-              message.text
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: marked(message.text, { renderer }),
+                }}
+              />
             )}
           </div>
         )}

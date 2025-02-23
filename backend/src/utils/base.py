@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from src.utils.settings import model as global_model
 from src.utils.settings import tokenizer as global_tokenizer
@@ -15,25 +15,72 @@ def get_device() -> tuple[torch.device, str]:
 
 
 async def prepare_tokenizer_and_model(model_name: str):
-    """Prepare the tokenizer and optimized model based on the device."""
+    """Prepare tokenizer and model with hardware-optimized settings."""
     global global_tokenizer, global_model
+
     if global_tokenizer is None or global_model is None:
-        local_tokenizer = AutoTokenizer.from_pretrained(model_name)
-        local_model = AutoModelForCausalLM.from_pretrained(model_name)
+        # Detect hardware
+        device, _ = get_device()
 
-        device, device_name = get_device()  # Assume this function returns the device
+        # Model-specific configuration
+        load_kwargs = {}
+        if 'phi-3' in model_name.lower():
+            load_kwargs.update({'trust_remote_code': True, 'attn_implementation': 'eager'})  # Better for CPU/MPS
+        elif 'starcoder' in model_name.lower():
+            load_kwargs['trust_remote_code'] = True
+
+        # Quantization config
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type='nf4',
+            bnb_4bit_compute_dtype=torch.bfloat16,
+        )
+
+        # Load tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, padding_side='left', truncation_side='left', use_fast=True
+        )
+        tokenizer.pad_token = tokenizer.eos_token
+
+        # Load model with hardware-specific optimizations
         if device.type == 'cpu':
-            # Apply dynamic quantization for CPU
-            local_model = torch.quantization.quantize_dynamic(local_model, {torch.nn.Linear}, dtype=torch.qint8)
-        elif device.type == 'cuda' or device.type == 'mps':
-            # Convert to FP16 for GPU or MPS
-            local_model.half()
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                quantization_config=bnb_config if 'phi-3' in model_name else None,
+                torch_dtype=torch.float32,
+                **load_kwargs,
+            )
+        elif device.type == 'mps':
+            model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, **load_kwargs).to(
+                device
+            )
+        else:  # CUDA
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, torch_dtype=torch.float16, device_map='auto', **load_kwargs
+            )
 
-        local_model.to(device)
-        local_model.eval()
-        global_tokenizer, global_model = local_tokenizer, local_model
+        # Apple Silicon optimizations
+        if device.type == 'mps':
+            # Add these MPS-specific optimizations
+            torch.mps.set_per_process_memory_fraction(0.4)  # Prevent OOM
+            torch.mps.empty_cache()
+            torch.mps.synchronize()
+
+        model.eval()
+        global_tokenizer, global_model = tokenizer, model
 
     return global_tokenizer, global_model
+
+
+async def cleanup_model():
+    """Clear model from memory, important for Apple Silicon"""
+    global global_tokenizer, global_model
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
+    del global_model
+    global_model = None
+    global_tokenizer = None
 
 
 async def get_stopping_strings(type: str, question: str) -> list[str]:

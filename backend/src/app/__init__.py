@@ -5,6 +5,7 @@ from aiohttp import WSCloseCode, web
 from aiohttp.web import Request, Response, WebSocketResponse
 
 from src.utils.auto_chat_engine import gpt_question_and_answer
+from src.utils.base import cleanup_model
 from src.utils.chat_engine import squad_question_answering
 
 WEBSOCKETS = web.AppKey("websockets", WeakSet[WebSocketResponse])
@@ -15,8 +16,11 @@ async def start_background_tasks(app: web.Application) -> None:
     app[WEBSOCKETS] = WeakSet()
 
 
-async def cleanup_ws(app: web.Application) -> None:
+async def cleanup_app(app: web.Application) -> None:
     """Cleanup WebSocket connections on shutdown."""
+    # Cleanup models
+    await cleanup_model()
+    # Close all WebSocket connections
     for websocket in set(app[WEBSOCKETS]):  # type: ignore
         await websocket.close(code=WSCloseCode.GOING_AWAY, message=b'Server shutdown')
 
@@ -67,6 +71,6 @@ def init_app() -> web.Application:
 
     # Add startup/cleanup handlers
     app.on_startup.append(start_background_tasks)
-    app.on_shutdown.append(cleanup_ws)
+    app.on_shutdown.append(cleanup_app)
 
     return app

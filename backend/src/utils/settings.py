@@ -25,5 +25,5 @@ class Settings:
 
 
 base_settings = Settings()
-MODEL_NAME = 'EleutherAI/gpt-neo-1.3B'
+MODEL_NAME = 'microsoft/Phi-3-mini-4k-instruct'
 tokenizer, model = None, None
